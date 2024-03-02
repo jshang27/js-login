@@ -1,0 +1,21 @@
+{
+  "name": "js-login",
+  "version": "1.0.0",
+  "description": "Simple JavaScript log-in server",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "start": "node src/index.js",
+    "build": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "js-login"
+  },
+  "author": "Jason Shang",
+  "license": "SEE LICENSE IN LICENSE",
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}
