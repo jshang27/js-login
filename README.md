@@ -1,6 +1,19 @@
 # js-login
 JavaScript log-in server.
 
+# How to Run?
+
+Run the following commands: 
+
+```sh
+> npm run build
+...
+> npm start <port>
+...
+```
+
+... then connect on localhost:\<port>
+
 # Resources
 - [W3 Schools Node.js `http` Module](https://www.w3schools.com/nodejs/nodejs_http.asp)
 - [MDN Web Docs `URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL)
