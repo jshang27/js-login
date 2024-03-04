@@ -39,6 +39,12 @@ http.createServer(async (req, res) => {
     } else if (file == "error/error.css") {
         res.writeHead(200, { "Content-Type": "text/css" });
         res.write(fs.readFileSync("pages/error/error.css"));
+    } else if (file === "login.html") {
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.write(fs.readFileSync("pages/login.html"));
+    } else if (file === "signup.html") {
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.write(fs.readFileSync("pages/signup.html"));
     } else {
         res.writeHead(404, { "Content-Type": "text/html" });
         res.write(fs.readFileSync("pages/error/404.html"));
