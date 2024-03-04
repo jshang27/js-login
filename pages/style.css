@@ -10,11 +10,21 @@ kbd {
     font-family: monospace;
 }
 
-.error-container {
+a {
+    text-decoration: none;
+}
+
+.container {
     width: 100vw;
     height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.signin-up {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }

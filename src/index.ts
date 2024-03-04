@@ -32,38 +32,44 @@ http.createServer(async (req, res) => {
     requestPool++;
     let u = new URL(`https://${req.headers.host}${req.url}`);
     const file = u.pathname.substring(1);
+
     if (file == "signup") {
         await handleSignup(res, u.searchParams).catch(_ => { });
     } else if (file == "login") {
         await handleLogin(res, u.searchParams).catch(_ => { });
-    } else if (file == "error/error.css") {
+    } else if (file == "style.css") {
         res.writeHead(200, { "Content-Type": "text/css" });
-        res.write(fs.readFileSync("pages/error/error.css"));
+        res.write(fs.readFileSync("pages/style.css"));
     } else if (file === "login.html") {
         res.writeHead(200, { "Content-Type": "text/html" });
         res.write(fs.readFileSync("pages/login.html"));
     } else if (file === "signup.html") {
         res.writeHead(200, { "Content-Type": "text/html" });
         res.write(fs.readFileSync("pages/signup.html"));
+    } else if (file === "") {
+        res.writeHead(200, { "Content-Type": "text/html" });
+        res.write(fs.readFileSync("pages/index.html"));
     } else {
         res.writeHead(404, { "Content-Type": "text/html" });
         res.write(fs.readFileSync("pages/error/404.html"));
     }
+
     res.end();
     requestPool--;
 }).listen(process.argv[2])
 
-type UserInfo = {
+type ParamsUserInfo = {
     error: boolean
     user: string
     pass: string
 }
+
 type StoredUserInfo = {
     user: string
     hash: string
 }
 
-function getUserAndPass(searchParams: URLSearchParams): UserInfo {
+function getUserAndPass(searchParams: URLSearchParams): ParamsUserInfo {
     if (!searchParams.has("user") || !searchParams.has("pass")) {
         return { error: true, user: "", pass: "" };
     }
@@ -72,14 +78,14 @@ function getUserAndPass(searchParams: URLSearchParams): UserInfo {
     return { error: false, user, pass };
 }
 
-const validChars = "ABCDEFGHJIKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789";
+const validUserChars = "ABCDEFGHJIKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789";
 
 function verifyUser(user: string): boolean {
     if (user.length < 3 || user.length > 32) {
         return false;
     }
     for (let i = 0; i < user.length; i++) {
-        if (!validChars.includes(user.charAt(i))) {
+        if (!validUserChars.includes(user.charAt(i))) {
             return false;
         }
     }
@@ -110,6 +116,7 @@ function verifyPass(pass: string): boolean {
         } else {
             symbol = true;
         }
+
         if (number && lower && upper && symbol) {
             return true;
         }
