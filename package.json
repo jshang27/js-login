@@ -15,7 +15,11 @@
   "author": "Jason Shang",
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^20.11.24",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1"
   }
 }

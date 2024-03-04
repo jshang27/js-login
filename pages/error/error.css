@@ -6,6 +6,10 @@ body {
     margin: 0;
 }
 
+kbd {
+    font-family: monospace;
+}
+
 .error-container {
     width: 100vw;
     height: 100vh;
