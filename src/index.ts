@@ -1,8 +1,8 @@
+// Copyright 2024 Jason Shang
+
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 import fs from "fs";
 import http from "http";
-
 
 /* SERVER START UP */
 if (process.argv.length < 3) {

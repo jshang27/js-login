@@ -11,6 +11,15 @@
 <body>
     <div class="container">
         <h1>Login</h1>
+        <form action="/login" class="container" style="height: auto;">
+            <label for="user">Username<span class="red">*</span></label>
+            <input id="user" name="user" type="text" required minlength=3 maxlength=32>
+            <br>
+            <label for="pass">Password<span class="red">*</span></label>
+            <input id="pass" name="pass" type="password" required minlength=8>
+            <br>
+            <input type="submit">
+        </form>
     </div>
 </body>
 

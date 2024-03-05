@@ -28,3 +28,7 @@ a {
     flex-direction: row;
     justify-content: space-between;
 }
+
+.red {
+    color: rgb(212, 23, 23);
+}
