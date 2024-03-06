@@ -11,7 +11,64 @@
 <body>
     <div class="container">
         <h1>Signup</h1>
+        <form action="/signup" class="container" style="height: auto;">
+            <span style="font-size: 0.9em; width: 16rem">Username should be 3-32 characters and can only have the
+                characters <kbd>a</kbd>-<kbd>z</kbd>, <kbd>A</kbd>-<kbd>Z</kbd>, <kbd>0</kbd>-<kbd>9</kbd>, and
+                <kbd>_</kbd>.</span>
+            <span style="font-size: 0.9em; width: 16rem;">Passwords should contain contain at least one number
+                (<kbd>0</kbd>-<kbd>9</kbd>), one lowercase letter (<kbd>a</kbd>-<kbd>z</kbd>), one uppercase letter
+                (<kbd>A</kbd>-<kbd>Z</kbd>), and one symbol.</span>
+            <br>
+            <label for="user">Username<span class="red">*</span></label>
+            <input id="user" name="user" type="text" required minlength=3 maxlength=32 pattern="^[A-Za-z_0-9]*$">
+            <br>
+            <label for="pass">Password<span class="red">*</span></label>
+            <input id="pass" name="pass" type="password" required minlength=8>
+            <br>
+            <label for="confirm">Confirm password<span class="red">*</span></label>
+            <input id="confirm" type="password" required minlength=8>
+            <br>
+            <input type="submit">
+        </form>
     </div>
+    <script>
+        // adapted from https://codepen.io/diegoleme/pen/qBpyvr
+        const password = document.getElementById("pass")
+            , confirm_password = document.getElementById("confirm");
+
+        function validatePassword() {
+            if (password.value != confirm_password.value) {
+                confirm_password.setCustomValidity("Passwords don't match");
+            }
+
+            let number = false;
+            let lower = false;
+            let upper = false;
+            let symbol = false;
+
+            for (let i = 0; i < pass.length; i++) {
+                let c = pass.charAt(i);
+                if (numbers.includes(c)) {
+                    number = true;
+                } else if (lowers.includes(c)) {
+                    lower = true;
+                } else if (uppers.includes(c)) {
+                    upper = true;
+                } else {
+                    symbol = true;
+                }
+
+                if (number && lower && upper && symbol) {
+                    confirm_password.setCustomValidity('');
+                    password.setCustomValidity();
+                }
+            }
+            password.setCustomValidity("Need a lowercase and uppercase letter, a number, and a symbol");
+        }
+
+        password.onchange = validatePassword;
+        confirm_password.onkeyup = validatePassword;
+    </script>
 </body>
 
 </html>
