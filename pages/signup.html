@@ -41,13 +41,17 @@
                 confirm_password.setCustomValidity("Passwords don't match");
             }
 
+            const numbers = "0123456789";
+            const lowers = "abcdefghijklnopqrstuvwxyz";
+            const uppers = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
             let number = false;
             let lower = false;
             let upper = false;
             let symbol = false;
 
-            for (let i = 0; i < pass.length; i++) {
-                let c = pass.charAt(i);
+            for (let i = 0; i < password.value.length; i++) {
+                let c = password.value.charAt(i);
                 if (numbers.includes(c)) {
                     number = true;
                 } else if (lowers.includes(c)) {
@@ -60,7 +64,8 @@
 
                 if (number && lower && upper && symbol) {
                     confirm_password.setCustomValidity('');
-                    password.setCustomValidity();
+                    password.setCustomValidity('');
+                    return;
                 }
             }
             password.setCustomValidity("Need a lowercase and uppercase letter, a number, and a symbol");

@@ -15,11 +15,6 @@ if (Number.isNaN(+process.argv[2])) {
 }
 
 /* SERVER */
-function send_timeout(res: http.ServerResponse<http.IncomingMessage> & { req: http.IncomingMessage; }): void {
-    res.writeHead(408, { "Content-Type": "text/html" });
-    res.write(fs.readFileSync("pages/error/timeout.html"));
-}
-
 let requestPool = 0;
 
 http.createServer(async (req, res) => {
@@ -33,26 +28,38 @@ http.createServer(async (req, res) => {
     let u = new URL(`https://${req.headers.host}${req.url}`);
     const file = u.pathname.substring(1);
 
+    let code: number
+    let header: Record<string, string>
+    let content: Buffer
+
     if (file == "signup") {
-        await handleSignup(res, u.searchParams).catch(_ => { });
+        ({ code, header, content } = await handleSignup(u.searchParams));
     } else if (file == "login") {
-        await handleLogin(res, u.searchParams).catch(_ => { });
+        ({ code, header, content } = await handleLogin(u.searchParams));
     } else if (file == "style.css") {
-        res.writeHead(200, { "Content-Type": "text/css" });
-        res.write(fs.readFileSync("pages/style.css"));
+        code = 200;
+        header = { "Content-Type": "text/css" };
+        content = fs.readFileSync("pages/style.css");
     } else if (file === "login.html") {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.write(fs.readFileSync("pages/login.html"));
+        code = 200;
+        header = { "Content-Type": "text/html" };
+        content = fs.readFileSync("pages/login.html");
     } else if (file === "signup.html") {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.write(fs.readFileSync("pages/signup.html"));
+        code = 200;
+        header = { "Content-Type": "text/html" };
+        content = fs.readFileSync("pages/signup.html");
     } else if (file === "") {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.write(fs.readFileSync("pages/index.html"));
+        code = 200;
+        header = { "Content-Type": "text/html" };
+        content = fs.readFileSync("pages/index.html");
     } else {
-        res.writeHead(404, { "Content-Type": "text/html" });
-        res.write(fs.readFileSync("pages/error/404.html"));
+        code = 404;
+        header = { "Content-Type": "text/html" };
+        content = fs.readFileSync("pages/error/404.html");
     }
+
+    res.writeHead(code, header);
+    res.write(content);
 
     res.end();
     requestPool--;
@@ -69,7 +76,13 @@ type StoredUserInfo = {
     hash: string
 }
 
-function getUserAndPass(searchParams: URLSearchParams): ParamsUserInfo {
+type ServerResponse = {
+    code: number
+    header: Record<string, string>
+    content: Buffer
+}
+
+function getParamsUserInfo(searchParams: URLSearchParams): ParamsUserInfo {
     if (!searchParams.has("user") || !searchParams.has("pass")) {
         return { error: true, user: "", pass: "" };
     }
@@ -130,104 +143,88 @@ function getUsers(): StoredUserInfo[] {
     const text = fs.readFileSync("src/info.pwd");
     let nameStart = 0;
     for (let i = 0; i < text.length; i++) {
-        if (text.at(i) == 0) {
+        if (text.at(i) == 36) {
             const user = text.subarray(nameStart, i).toString();
-            const hash = text.subarray(i + 1, i + 61).toString();
+            const hash = text.subarray(i, i + 60).toString();
             users.push({ user, hash });
-            nameStart += i + 62;
-            i = nameStart - 1;
+            nameStart += i + 60;
+            i = nameStart;
         }
     }
 
     return users;
 }
 
-async function handleSignup(res: http.ServerResponse<http.IncomingMessage> & { req: http.IncomingMessage; }, searchParams: URLSearchParams) {
-    return new Promise<void>(async (resolve, reject) => {
+async function handleSignup(searchParams: URLSearchParams) {
+    return new Promise<ServerResponse>(async (resolve, reject) => {
         let timeout = setTimeout(() => {
-            send_timeout(res);
-            reject();
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/timeout.html") })
         }, 5000);
 
-        const { error, user, pass } = getUserAndPass(searchParams);
+        const { error, user, pass } = getParamsUserInfo(searchParams);
         if (error) {
-            if (!res.closed) {
-                res.writeHead(400, { "Content-Type": "text/html" });
-                res.write(fs.readFileSync("pages/error/400.html"));
-            }
             clearTimeout(timeout);
-            reject();
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/400.html") })
             return;
         }
 
         if (!verifyUser(user)) {
-            if (!res.closed) {
-                res.writeHead(400, { "Content-Type": "text/html" });
-                res.write(fs.readFileSync("pages/error/baduser.html"));
-            }
             clearTimeout(timeout);
-            reject();
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/baduser.html") })
             return;
         }
         if (!verifyPass(pass)) {
-            if (!res.closed) {
-                res.writeHead(400, { "Content-Type": "text/html" });
-                res.write(fs.readFileSync("pages/error/badpass.html"));
-            }
             clearTimeout(timeout);
-            reject();
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/badpass.html") })
             return;
         }
 
         const users = getUsers();
         for (let i = 0; i < users.length; i++) {
             if (users[i].user == user) {
-                if (!res.closed) {
-                    res.writeHead(409, { "Content-Type": "text/html" });
-                    res.write(fs.readFileSync("pages/error/inuse.html"));
-                }
                 clearTimeout(timeout);
-                reject();
+                resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/inuse.html") })
                 return;
             }
         }
 
         const hash = await bcrypt.hash(pass, 16).catch(_ => {
-            if (!res.closed) {
-                res.writeHead(500, { "Content-Type": "text/html" });
-                res.write(fs.readFileSync("pages/error/server-error.html"));
-            }
             clearTimeout(timeout);
-            reject();
+            resolve({ code: 500, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/server-error.html") });
+            return;
         });
-        if (hash != undefined) {
-            fs.appendFileSync("src/info.pwd", user + "\x00" + hash);
-        } else {
+
+        if (hash == undefined) {
             return;
         }
 
-        if (!res.closed) {
-            res.writeHead(200, { "Content-Type": "text/html" });
-            res.write(fs.readFileSync("pages/success/signedup.html"));
-        }
+        fs.appendFileSync("src/info.pwd", user + hash);
         clearTimeout(timeout);
-        resolve();
+        resolve({ code: 200, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/success/signedup.html") })
     })
 }
 
-async function handleLogin(res: http.ServerResponse<http.IncomingMessage> & { req: http.IncomingMessage; }, searchParams: URLSearchParams) {
-    return new Promise<void>(async (resolve, reject) => {
+async function handleLogin(searchParams: URLSearchParams) {
+    return new Promise<ServerResponse>(async (resolve, reject) => {
         let timeout = setTimeout(() => {
-            send_timeout(res);
-            reject();
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/timeout.html") })
         }, 5000);
 
-        const { error, user, pass } = getUserAndPass(searchParams);
+        const { error, user, pass } = getParamsUserInfo(searchParams);
         if (error) {
-            res.writeHead(400, { "Content-Type": "text/html" });
-            res.write(fs.readFileSync("pages/error/400.html"));
             clearTimeout(timeout);
-            reject();
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/400.html") })
+            return;
+        }
+
+        if (!verifyUser(user)) {
+            clearTimeout(timeout);
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/failed-login.html") })
+            return;
+        }
+        if (!verifyPass(pass)) {
+            clearTimeout(timeout);
+            resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/failed-login.html") })
             return;
         }
 
@@ -235,31 +232,18 @@ async function handleLogin(res: http.ServerResponse<http.IncomingMessage> & { re
         for (let i = 0; i < users.length; i++) {
             if (users[i].user == user) {
                 if (await bcrypt.compare(pass, users[i].hash)) {
-                    if (!res.closed) {
-                        res.writeHead(200, { "Content-Type": "text/html" });
-                        res.write(fs.readFileSync("pages/success/loggedin.html"));
-                    }
                     clearTimeout(timeout);
-                    resolve();
+                    resolve({ code: 200, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/success/loggedin.html") })
                     return;
                 } else {
-                    if (!res.closed) {
-                        res.writeHead(400, { "Content-Type": "text/html" });
-                        res.write(fs.readFileSync("pages/error/failed-login.html"));
-                    }
                     clearTimeout(timeout);
-                    reject();
+                    resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/failed-login.html") })
                     return;
                 }
             }
         }
 
-        if (!res.closed) {
-            res.writeHead(400, { "Content-Type": "text/html" });
-            res.write(fs.readFileSync("pages/error/failed-login.html"));
-        }
-
         clearTimeout(timeout);
-        reject();
+        resolve({ code: 400, header: { "Content-Type": "text/html" }, content: fs.readFileSync("pages/error/failed-login.html") })
     })
 }
