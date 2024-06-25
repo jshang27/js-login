@@ -21,4 +21,3 @@ Run the following commands:
 - [MDN Web Docs HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
 - [NPM `bcrypt` Module](https://www.npmjs.com/package/bcrypt)
 - [MDN Web Docs `form` Element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form)
-- [Confirm password example project](https://codepen.io/diegoleme/pen/qBpyvr)
